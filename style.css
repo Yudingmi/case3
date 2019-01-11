@@ -1,0 +1,142 @@
+﻿/*-------------------------------------------------*/
+ul, li {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+a {
+    text-decoration: none;
+    out-line: none;
+    color: #333;
+}
+.role-list1 li, .role-list2 li {
+    height: 28px;
+    line-height: 28px;
+    padding-left: 10px;
+    cursor: pointer;
+}
+.role-list1 a, .role-list2 a {
+    display: inline-block;
+    width: 20px;
+    height: 15px;
+    margin-right: 4px;
+    background-color: #808080;
+}
+/*-------------------------------------------------*/
+path {
+    fill-opacity: 0.8;
+}
+
+.vlines, .hlines {
+    stroke: rgb(150,148,109);
+    shape-rendering: crispEdges;
+    stroke-width: 1px;
+    stroke-opacity: 0.3;
+}
+
+.hlabels line, .vlabels line {
+    stroke: rgb(150,148,109);
+    shape-rendering: crispEdges;
+    stroke-width: 1px;
+    stroke-opacity: 0.7;
+}
+
+.hlabels text, .vlabels text {
+    color: rgb(150,148,109);
+    font-size: 12px;
+}
+
+body {
+    margin: 10px auto;
+}
+
+svg {
+    display: inline;
+    float: left;
+}
+
+.legend {
+    display: inline-block;
+    margin: 10px;
+    margin-top: 30px;
+    margin-left: 0;
+    max-height: 280px;
+    min-width: 190px;
+    overflow: auto;
+}
+
+    .legend table {
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    .legend tr, .legend td, .legend div {
+        margin: 0;
+        padding: 0;
+    }
+
+    .legend div {
+        width: 20px;
+        height: 20px;
+        float: left;
+    }
+
+    .legend span {
+        padding: 0 5px;
+        margin: 0
+    }
+
+    .legend tr:hover {
+        background: silver;
+    }
+
+.distquantdiv {
+    clear: both;
+    padding: 10px;
+    overflow: hidden;
+    margin: 20px;
+}
+
+    .distquantdiv h3 {
+        padding-left: 40px;
+        margin-bottom: 0;
+    }
+
+.stat {
+    font-size: 12px;
+}
+
+text {
+    font-size: 8px;
+}
+/*-------------------------------------------------*/
+.axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+            stroke-opacity: 1;
+        }
+
+        .bar {
+            fill: #DEA681;
+        }
+
+            .bar:hover {
+                fill: #483C32;
+            }
+
+/*-------------------------------------------------*/
+.tooltip {
+    position: absolute;
+    padding: 5px;
+    width: 150px;
+    height: auto;
+    font-family: simsun;
+    font-size: 14px;
+    color: black;
+    border-width: 2px solid rgb(255,255,255);
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+}

@@ -1,0 +1,489 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="css/style.css" rel="stylesheet" />
+    <style>
+        button {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+        }
+        .row {
+            width: 1260px;
+            clear: both
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div style="margin:0 auto;margin-top:60px;float:left;">
+            <svg class="svg-stack" width="960" height="500"></svg>
+        </div>
+        <div style="margin:0 auto;width:300px;height:460px; overflow-y:auto;
+                    margin-top:60px;float:left;">
+            <div class="chapter-title" style="text-align:center;"><h3>英雄列表</h3></div>
+            <div style="width:140px;height:500px;float:left;">
+                <ul class="role-list1"></ul>
+            </div>
+            <div style="width:140px;height:500px;float:left;">
+                <ul class="role-list2"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <svg class="svg-brush" width="1260" height="300"></svg>
+    </div>
+    <script src="d3/d3.v5.js"></script>
+    <script>
+        var colors = [
+            "#BF4953", "#D982B2", "#1C588C", "#EBDC54", "#401B13", "#274E5B", "#F49763", "#C0ADA1", "#F36B6B", "#296165",
+            "#7B8D8B", "#BB755F", "#432E16", "#D75CFB", "#44E337", "#51EBE3", "#ED3D24", "#4069AE", "#E1CC72", "#E33E88",
+            "#D8A3B3", "#428B50", "#66F3A3", "#E28A2A", "#B2594D", "#609297", "#E8F03F", "#3D2241", "#954EB3", "#6A771C",
+            "#58AE2E", "#75C5E9", "#BBEB85", "#A7DAB9", "#6578E6", "#932C5F", "#865A26", "#CC78B9", "#2E5A52", "#8C9D79",
+            "#9F6270", "#6D3377", "#551927", "#DE8D5A", "#E3DEA8", "#C3C9DB", "#3A5870", "#CD3B4F", "#E476E3", "#DCAB94",
+            "#33386D", "#4DA284", "#817AA5", "#8D8384", "#624F49", "#8E211F", "#9E785B", "#355C22", "#D4ADDE", "#A98229",
+            "#E88B87", "#28282D", "#253719", "#BD89E1", "#EB33D8", "#6D311F", "#DF45AA", "#E86723", "#6CE5BC", "#765175",
+            "#942C42", "#986CEB", "#8CC488", "#8395E3", "#D96F98", "#9E2F83", "#CFCBB8", "#4AB9B7", "#E7AC2C", "#E96D59",
+            "#929752", "#5E54A9", "#CCBA3F", "#BD3CB8", "#408A2C", "#8AE32E", "#5E5621", "#ADD837", "#BE3221", "#8DA12E",
+            "#3BC58B", "#6EE259", "#52D170", "#D2A867", "#5C9CCD", "#DB6472", "#B9E8E0", "#CDE067", "#9C5615", "#536C4F",
+            "#A74725", "#CBD88A", "#DF3066", "#E9D235", "#EE404C", "#7DB362", "#B1EDA3", "#71D2E1", "#A954DC", "#91DF6E",
+            "#CB6429", "#D64ADC", "#DF3066", "#E90205", "#E04F4C", "#7D0360", "#01EDA3", "#716291", "#695DDC", "#919FFE",
+            "#9F6070", "#6DE377", "#55A927", "#D08D5A", "#E30EA8", "#C309DB", "#305870", "#CDFB4F", "#E406E3", "#DC3B94",
+            "#F26270", "#FD3377", "#F51927",
+        ];
+
+        var StackChart = function () {
+            this.start = 0;
+            this.end = 120;
+            var data = null;
+
+            var temp = this;
+            //---------------------------------------------------------------------
+            var n = 10;
+            var RoleList = {};
+            var margin = { top: 5, left: 40, right: 30, bottom: 40 };
+            var svg = d3.select(".svg-stack"),
+                width = +svg.attr("width"),
+                height = +svg.attr("height");
+                
+            var garea = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                
+            var tip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0.0);
+
+            //---------------------------------------------------------------------
+            var formatPercent = d3.format(" ");
+
+            //---------------------------------------------------------------------
+            var chapterLinear = d3.scaleLinear()
+                .domain([0, width - (margin.left + margin.right)])
+                .range([0, 120]);
+               
+
+            //---------------------------------------------------------------------
+            // 定义x轴比例尺
+            var x = d3.scaleLinear()
+                .domain([0, 120])
+                .range([0, width - (margin.left + margin.right)]);
+             
+            var xAxis = d3.axisBottom()
+                .scale(x)
+                .tickFormat(function (d) {
+                    return d;
+                })
+                .ticks(24);
+               
+            //---------------------------------------------------------------------
+            // 定义y轴比例尺
+            var y = d3.scaleLinear()
+                .range([height - (margin.top + margin.bottom), 0]);
+                
+            var yAxis = d3.axisLeft()
+                .scale(y);
+               
+
+            //---------------------------------------------------------------------
+            var area = d3.area()
+                .x(function (d, i) { return x(i); })
+                .y0(function (d) { return y(d[0]); })
+                .y1(function (d) { return y(d[1]); });
+             
+
+            //---------------------------------------------------------------------
+            // 绘制X轴
+            svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(" + margin.left + "," + (height - margin.bottom) + ")")
+                .call(xAxis)
+                .append("text")
+                .attr("dy", ".71em")
+                .style("writing-mode", "tb-lr")
+                .style("text-anchor", "end")
+
+            //---------------------------------------------------------------------
+            // 绘制Y轴
+            svg.append("g")
+                .attr("class", "y axis")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .call(yAxis)
+                .append("text")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                ;
+            //---------------------------------------------------------------------
+            // 获取堆栈数据矩阵的最大值
+            function stackMax(layer) {
+                return d3.max(layer, function (d) { return d[1]; });
+            }
+
+            //---------------------------------------------------------------------
+            // 获取堆栈数据矩阵的最小值
+            function stackMin(layer) {
+                return d3.min(layer, function (d) { return d[0]; });
+            }
+
+            function createRoleList(res) {
+                for (var i = 1; i < res.columns.length; i++) {
+                    RoleList[res.columns[i]] = {
+                        IsDraw: i <= n ? true : false,
+                        bgColor: colors[i - 1],
+                        Num: i,
+                        ChapterList: []
+                    };
+                    var listname = i < 68 ? ".role-list1" : ".role-list2";
+                    var li = d3.select(listname)
+                        .append("li")
+                        .attr("rolename", res.columns[i])
+                        ;
+                    li.append("a")
+                        .attr("class", "role-color bar" + i)
+                        ;
+                    li.append("span")
+                        .text(res.columns[i])
+                        ;
+                    li.append("span")
+                        .attr("class", "count count" + i)
+                        ;
+                    li.on("click", function (d, k) {
+                        var flag = 1;
+                        var rolename = d3.select(this).attr("rolename");
+                        if (RoleList[rolename].IsDraw === true) {
+                            RoleList[rolename].IsDraw = false;
+                            flag = 2
+                        }
+                        else {
+                            RoleList[rolename].IsDraw = true;
+                            flag = 1;
+                        }
+                        draw(data, flag);
+                    });
+                }
+            }
+
+            function SetBarBgColor() {
+                for (var e in RoleList) {
+                    if (RoleList[e].IsDraw === true) {
+                        d3.select(".bar" + RoleList[e].Num)
+                            .style("background-color", RoleList[e].bgColor)
+                            ;
+                    }
+                    else {
+                        d3.select(".bar" + RoleList[e].Num)
+                            .style("background-color", "")
+                            ;
+                    }
+                }
+            }
+
+            function draw(res, flag) {
+                n = 0;
+                for (var e in RoleList) {
+                    if (RoleList[e].IsDraw === true) {
+                        n++;
+                    }
+                }
+                //---------------------------------------------------------------------
+                var stack = d3.stack()
+                    .keys(d3.range(n))
+                    .offset(d3.stackOffsetDiverging)
+                    ;
+
+                //---------------------------------------------------------------------
+                var layers = stack(res.slice(temp.start, temp.end).map(function (d) {
+                    var ret = [];
+                    var i = 0;
+                    for (var e in d) {
+                        if (e !== "chapter" && RoleList[e].IsDraw === true) {
+                            ret.push(d[e]);
+                            i++;
+                        }
+                        if (i >= n) break;
+                    }
+                    return ret;
+                }));
+
+                //---------------------------------------------------------------------
+                y.domain([d3.min(layers, stackMin), d3.max(layers, stackMax)])
+                    .tickFormat(formatPercent);
+
+                x.domain([temp.start, temp.end]);
+                if ((temp.end - temp.start) < 60) {
+                    xAxis.scale(x)
+                        .tickFormat(function (d) {
+                            return d;
+                        })
+                        .ticks((temp.end - temp.start));
+                }
+                chapterLinear.range([temp.start, temp.end]);
+
+                drawExit(layers);
+                drawEnter(layers);
+                drawUpdate(layers);
+                //---------------------------------------------------------------------
+                SetBarBgColor();
+
+                //---------------------------------------------------------------------
+                // 重新绘制X轴
+                svg.select(".x.axis")
+                    .attr("transform", "translate(" + margin.left + "," + (height - margin.bottom) + ")")
+                    .call(xAxis)
+                    .append("text")
+                    .attr("dy", ".71em")
+                    .style("writing-mode", "tb-lr")
+                    .style("text-anchor", "end")
+
+                //---------------------------------------------------------------------
+                // 重新绘制Y轴
+                svg.select(".y.axis")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                    .call(yAxis)
+                    .append("text")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    ;
+            }
+
+            function drawEnter(layers) {
+                //---------------------------------------------------------------------
+                // 绘制面积区域，通过path元素来绘制
+                garea.selectAll("path")
+                    .data(layers.slice(temp.start, temp.end))
+                    .enter().append("path")
+                    .style("stroke-opacity", 0)
+                    .attr("d", area)
+                    .attr("fill", function (d, i) {
+
+                        return colors[i];
+                    })
+                    .on("mouseover", function (d, i) {
+                        var mouseX = d3.event.pageX;
+                        var v = Math.round(chapterLinear(mouseX - margin.left));
+                        d3.select(".chapter-title h3").text("第" + v + "回");
+                        ShowCount(v);
+                    })
+                    .on("mousemove", function (d, i) {
+                        var mouseX = d3.event.pageX;
+                        var v = Math.round(chapterLinear(mouseX - margin.left));
+                        d3.select(".chapter-title h3").text("第" + v + "回");
+                        ShowCount(v);
+                    })
+                    .on("mouseout", function (d, i) {
+                        d3.select(".chapter-title h3").text("英雄列表");
+                        ShowCount(HideCount);
+                    });
+            }
+
+            function drawExit(layers) {
+                garea.selectAll("path")
+                    .data(layers)
+                    .exit()
+                    .style("stroke-opacity", 0)
+                    .attr("d", area)
+                    .attr("fill", function (d, i) {
+                        return colors[i];
+                    })
+                    ;
+            }
+
+            function drawUpdate(layers) {
+                garea.selectAll("path")
+                    .data(layers.slice(temp.start, temp.end))
+                    .style("stroke-opacity", 0)
+                    .attr("d", area)
+                    .attr("fill", function (d, i) {
+                        return colors[i];
+                    })
+                    ;
+            }
+
+            function ShowCount(index) {
+                for (var e in RoleList) {
+                    if (RoleList[e].IsDraw === true) {
+                        d3.select(".count" + RoleList[e].Num)
+                            .text(RoleList[e].ChapterList[index])
+                            ;
+                    }
+                }
+            }
+            function HideCount(index) {
+                d3.selectAll(".count")
+                    .text("")
+                    ;
+            }
+
+            StackChart.prototype.Init = function (res) {
+                data = res;
+                createRoleList(res);
+                draw(res, 1);
+                var temp = res.map(function (d, i) {
+                    for (var e in d) {
+                        if (e !== "chapter") {
+                            RoleList[e].ChapterList[i] = d[e];
+                        }
+                    }
+                    return [];
+                });
+            }
+
+            StackChart.prototype.ReDraw = function (start, end) {
+                temp.start = start;
+                temp.end = end;
+                draw(data);
+            }
+        };
+        
+    </script>
+
+    <script>
+        var BrushChart = function (stack) {
+            var data = null;
+            var margin = { top: 20, left: 40, right: 30, bottom: 40 };
+            var svg = d3.select(".svg-brush"),
+                width = +svg.attr("width"),
+                height = +svg.attr("height")
+                ;
+            console.log("height=" + height);
+            var gbrush = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                ;
+            var x = d3.scaleLinear()
+                .domain([0, 120])
+                .range([0, width - (margin.left + margin.right)]);
+
+            var xAxis = d3.axisBottom()
+                .scale(x)
+                .tickFormat(function (d) {
+                    return d;
+                })
+                .ticks(60)
+                ;
+
+            var dot = gbrush.append("g")
+                .attr("fill-opacity", 1)
+                .selectAll("circle");
+
+            var y = d3.scaleLinear()
+                .range([height - margin.top - margin.bottom, margin.bottom]);
+
+            
+
+            function brushcentered() {
+                var dx = x(1) - x(0), 
+                    cx = d3.mouse(this)[0],
+                    x0 = cx - dx / 2,
+                    x1 = cx + dx / 2;
+                d3.select(this.parentNode).call(brush.move, x1 > width ? [width - dx, width] : x0 < 0 ? [0, dx] : [x0, x1]);
+            }
+
+            function brushed() {
+                var extent = d3.event.selection.map(x.invert, x);
+                var start = Math.round(extent[0]);
+                var end = Math.round(extent[1]);
+                stack.ReDraw(start,end);
+            }
+
+
+            BrushChart.prototype.Init = function (res) {
+                data = res;
+
+                var list = [];
+                var max = 0;
+                for (var i = 0; i < res.length; i++) {
+                    var k = 0;
+                    for (var e in res[i]) {
+                        if (e !== "chapter") {
+                            var val = res[i][e] * 1;
+                            list.push({
+                                chapter: res[i]["chapter"],
+                                name: e,
+                                val: val,
+                                color: colors[k]
+                            });
+                            k++;
+                            if (max < val) {
+                                max = val;
+                            }
+                        }
+                    }
+                }
+                console.log("max=" + max);
+                y.domain([0, max]);
+
+                var brush = d3.brushX()
+                    .extent([[0, 0], [width - margin.left - margin.right, height - margin.bottom - margin.top]])
+                    .on("start brush", brushed)
+                    ;
+
+                gbrush.append("g")
+                    .call(brush)
+                    .call(brush.move, [0, 120].map(x))
+                    .selectAll(".overlay")
+                    .each(function (d) { d.type = "selection"; })
+                    .on("mousedown touchstart", brushcentered);
+
+                svg.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(" + margin.left + "," + (height - margin.bottom) + ")")
+                    .call(xAxis)
+                    .append("text")
+                    .attr("dy", ".71em")
+                    .style("writing-mode", "tb-lr")
+                    .style("text-anchor", "end");
+
+                dot.data(list)
+                    .enter().append("circle")
+                    .attr("transform", function (d) {
+                        return "translate(" + x(d.chapter) + "," + y(d.val+3) + ")";
+                    })
+                    .attr("r", 4)
+                    .style("fill", function (d, i) { return d.color; })
+                    .on("mouseover", function (d, i) {
+                        d3.select(this).attr("r", 10);
+                    })
+                    .on("mouseout", function (d, i) {
+                        d3.select(this).attr("r", 4);
+                    })
+                    ;
+            }
+        }
+    </script>
+
+    <script>
+        var stack = new StackChart();
+        var brush = new BrushChart(stack);
+
+        d3.csv("dataset/wm.csv").then(function (res) {
+            stack.Init(res);
+            brush.Init(res);
+        });
+    </script>
+</body>
+</html>
